@@ -23,6 +23,9 @@ fhirpy = "*"
 fhirpathpy = {git = "https://github.com/beda-software/fhirpath-py.git"}
 pytest = "*"
 jsonpath-ng = "*"
+pytest-asyncio = "*"
+ipython = "*"
+funcy = "*"
 
 [requires]
 python_version = "3.9"
