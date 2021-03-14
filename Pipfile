@@ -1,0 +1,28 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+anaconda = "*"
+jedi = ">=0.13.0"
+json-rpc = ">=1.8.1"
+service-factory = ">=0.1.5"
+black = "==20.8b1"
+pre-commit = "*"
+isort = "*"
+autoflake = "*"
+importmagic = "*"
+epc = "*"
+pep8 = "*"
+flake8 = "*"
+ipython = "*"
+
+[packages]
+fhirpy = "*"
+fhirpathpy = {git = "https://github.com/beda-software/fhirpath-py.git"}
+pytest = "*"
+jsonpath-ng = "*"
+
+[requires]
+python_version = "3.9"
