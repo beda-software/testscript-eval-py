@@ -59,6 +59,26 @@ def validate_profile_id(_assert_name, assertation, result, resource, var):
     logging.warning("Profile validation is not implemented yet")
 
 
+def compare_to_source_expression(_assert_name, assertation, result, resource, var):
+    fixtures = var["--fixtures--"]
+    id = assertation["compareToSourceId"]
+    fixture = fixtures[id]
+    exp = assertation["compareToSourceExpression"]
+    val = fhirpath(fixture, exp, {})
+    operator = assertation.get("operator", "exists")
+    vexp = assertation["expression"]
+    res = fhirpath(resource, vexp, {})
+    operations.eval(operator, res, val)
+
+
+def minimum_id(_assert_name, assertation, result, resource, var):
+    fixtures = var["--fixtures--"]
+    id = assertation["minimumId"]
+    fixture = fixtures[id]
+    for k, v in fixture.items():
+        assert resource[k] == v
+
+
 assert_rules = {
     "headerField": header_field,
     "responseCode": response_code,
@@ -66,14 +86,13 @@ assert_rules = {
     "path": path,
     "response": response,
     "validateProfileId": validate_profile_id,
-    # "compareToSourceExpression": compare_to_source_expression,
-    # "expression": expression, ;;
+    "compareToSourceExpression": compare_to_source_expression,
+    "minimumId": minimum_id,
     ######
     # not implemented operations
     ######
     "compareToSourcePath": not_implemented_assert,
     "contentType": not_implemented_assert,
-    "minimumId": not_implemented_assert,
     "navigationLinks": not_implemented_assert,
 }
 
@@ -81,7 +100,7 @@ assert_rules = {
 def eval(assertation, result, resource, var, fixtures):
     # TODO rid of temporary hack
     # pass fixtures as separated context item
-    var["__fixtures__"] = fixtures
+    var["--fixtures--"] = fixtures
     logging.warning("Check %s", assertation["description"])
     for assert_name, assert_eval in assert_rules.items():
         if assert_name in assertation:
