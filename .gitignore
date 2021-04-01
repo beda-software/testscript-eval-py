@@ -129,5 +129,4 @@ dmypy.json
 .pyre/
 
 #Local files
-.secret.json
-tests/data/
+.env

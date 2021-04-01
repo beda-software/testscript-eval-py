@@ -6,18 +6,28 @@ import testscript
 
 
 def load_test(file_name):
-    with open(file_name) as f:
+    with open(f"tests/data/{file_name}") as f:
         return json.loads(f.read())
 
 
-def load_secrets():
-    with open(".secret.json") as f:
-        return json.loads(f.read())
+env = {
+    "baseUrl": "http://localhost:8080/fhir",
+    "authorization": "Basic cm9vdDpzZWNyZXQ=",
+}
 
 
 @pytest.mark.asyncio
-async def test_conformance():
-    secrets = load_secrets()
-    test_name = secrets["testName"]
-    test = load_test(test_name)
-    await testscript.eval(test, secrets)
+@pytest.mark.parametrize(
+    "test_script",
+    [
+        "testscript-example-history.json",
+        "testscript-example-multisystem.json",
+        "testscript-example-readtest.json",
+        "testscript-example-search.json",
+        "testscript-example-update.json",
+        "testscript-example.json",
+    ],
+)
+async def test_conformance(test_script):
+    test = load_test(test_script)
+    await testscript.eval(test, env)

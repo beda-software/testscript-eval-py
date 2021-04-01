@@ -10,14 +10,15 @@ async def eval(definition, env):
         env["baseUrl"],
         authorization=env["authorization"],
     )
-    operation = definition["test"]["action"][0]["operation"]
-    operation_to_exec = resolve_string_template(operation["params"], env)
+    for test in definition["test"]:
+        operation = test["action"][0]["operation"]
+        resource = client.resource(operation["resource"])
 
-    resource = client.resource(operation["resource"])
+        operation_to_exec = resolve_string_template(operation["params"], env)
 
-    result, resource = await resource.execute(
-        operation_to_exec, method=operation.get("method", "get")
-    )
+        result, resource = await resource.execute(
+            operation_to_exec, method=operation.get("method", "get")
+        )
 
-    for assertation_definition in definition["test"]["action"][1:]:
-        assertation.eval(assertation_definition["assert"], result, resource, env)
+        for assertation_definition in definition["test"]["action"][1:]:
+            assertation.eval(assertation_definition["assert"], result, resource, env)
