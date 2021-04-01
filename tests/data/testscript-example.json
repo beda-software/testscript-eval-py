@@ -55,6 +55,21 @@
       ]
     }
   ],
+  "contained": [
+      {
+          "resourceType": "Patient",
+          "id": "example",
+          "name": [
+              {
+                  "use": "official",
+                  "given": [
+                      "Peter",
+                      "James"
+                  ],
+                  "family": "Chalmers"
+              }]
+      }
+    ],
   "purpose": "Patient Conditional Create (Update), Read and Delete Operations",
   "copyright": "© HL7.org 2011+",
   "metadata": {
@@ -84,7 +99,7 @@
       "autocreate": false,
       "autodelete": false,
       "resource": {
-        "reference": "Patient/example",
+        "reference": "#Patient/example",
         "display": "Peter Chalmers"
       }
     },
@@ -93,7 +108,7 @@
       "autocreate": false,
       "autodelete": false,
       "resource": {
-        "reference": "Patient/example",
+        "reference": "#Patient/example",
         "display": "Peter Chalmers (minimum)"
       }
     }
@@ -107,7 +122,7 @@
   "variable": [
     {
       "name": "createResourceId",
-      "path": "Patient/id",
+      "expression": "Patient.id",
       "sourceId": "fixture-patient-create"
     }
   ],
@@ -184,7 +199,8 @@
         "assert": {
           "description": "Confirm that the returned Patient contains the expected family name 'Chalmers'. Uses explicit compareToSourceId reference to fixture-patient-create used to create the Patient.",
           "compareToSourceId": "fixture-patient-create",
-          "compareToSourceExpression": "Patient.name.first().family",
+          "compareToSourceExpression": "Patient.name.family",
+          "expression": "Patient.name.family",
           "operator": "equals",
           "warningOnly": false
         }
@@ -246,7 +262,7 @@
           "assert": {
             "description": "Confirm that the returned Patient contains the expected family name 'Chalmers'. Uses explicit sourceId reference to read responseId fixture.",
             "operator": "equals",
-            "path": "fhir:Patient/fhir:name/fhir:family/@value",
+            "expression": "Patient.name.family",
             "sourceId": "fixture-patient-read",
             "value": "Chalmers",
             "warningOnly": false
@@ -256,7 +272,7 @@
           "assert": {
             "description": "Confirm that the returned Patient contains the expected given name 'Peter'. Uses explicit sourceId reference to read responseId fixture.",
             "operator": "equals",
-            "path": "fhir:Patient/fhir:name/fhir:given/@value",
+            "expression": "Patient.name.given",
             "sourceId": "fixture-patient-read",
             "value": "Peter",
             "warningOnly": false
@@ -266,9 +282,9 @@
           "assert": {
             "description": "Confirm that the returned Patient contains the expected family name 'Chalmers'. Uses explicit compareToSourceId reference to fixture-patient-create used to create the Patient and implicit reference to read response payload.",
             "compareToSourceId": "fixture-patient-create",
-            "compareToSourcePath": "fhir:Patient/fhir:name/fhir:family/@value",
+            "compareToSourceExpression": "Patient.name.family",
             "operator": "equals",
-            "path": "fhir:Patient/fhir:name/fhir:family/@value",
+            "expression": "Patient.name.family",
             "warningOnly": false
           }
         },
@@ -276,8 +292,8 @@
           "assert": {
             "description": "Confirm that the returned Patient contains the expected family name 'Chalmers'. Uses explicit compareToSourceId reference to fixture-patient-create used to create the Patient and explicit reference to read response payload and default operator of 'equals'.",
             "compareToSourceId": "fixture-patient-create",
-            "compareToSourcePath": "fhir:Patient/fhir:name/fhir:given/@value",
-            "path": "fhir:Patient/fhir:name/fhir:given/@value",
+            "compareToSourceExpression": "Patient.name.family",
+            "expression": "Patient.name.family",
             "sourceId": "fixture-patient-read",
             "warningOnly": false
           }

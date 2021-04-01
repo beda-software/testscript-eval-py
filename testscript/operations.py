@@ -9,8 +9,11 @@ def not_implemented_operation(operation, source, value):
     raise NotImplementedOperation(f"Operation {operation} is not implemented")
 
 
-def contains(_operation, source, value):
-    assert value in source
+def contains(_operation, source, values):
+    match = False
+    for value in values.split(","):
+        match = match or value in source
+    assert match, f"{source} not in {values}"
 
 
 def exists(_operation, source, _value):
@@ -22,17 +25,28 @@ def exists(_operation, source, _value):
         raise Exception("Exist validation issue")
 
 
+def equals(_operation, source, value):
+    assert source == value
+
+
+def not_empty(_operation, source, _value):
+    assert source is not None
+
+
 operations = {
     "exists": exists,
     "contains": contains,
     "in": contains,
-    "equals": not_implemented_operation,
+    "equals": equals,
+    "notEmpty": not_empty,
+    ######
+    # not implemented operations
+    ######
     "notEquals": not_implemented_operation,
     "notIn": not_implemented_operation,
     "greaterThan": not_implemented_operation,
     "lessThan": not_implemented_operation,
     "empty": not_implemented_operation,
-    "notEmpty": not_implemented_operation,
     "notContains": not_implemented_operation,
 }
 

@@ -1,5 +1,6 @@
 import logging
 
+from fhirpathpy import evaluate as fhirpath
 from jsonpath_ng.ext import parse
 
 from . import operations
@@ -20,12 +21,12 @@ def header_field(_assert_name, assertation, result, _resource, _var):
         return
     operator = assertation["operator"]
     header = assertation["headerField"]
-    value = assertation["value"]
-    operations.eval(operator, result.headers[header], value)
+    value = assertation.get("value")
+    operations.eval(operator, result.headers.get(header), value)
 
 
 def response_code(_assert_name, assertation, result, _resource, _var):
-    operator = assertation["operator"]
+    operator = assertation.get("operator", "equals")
     value = assertation["responseCode"]
     operations.eval(operator, str(result.status), value)
 
@@ -48,21 +49,39 @@ def path(_assert_name, assertation, result, resource, var):
     operations.eval(operator, res, value)
 
 
+def response(_assert_name, assertation, result, resource, var):
+    if assertation["response"] != "okay":
+        raise Exception("Response code f{assertation['response']} is not supported")
+    assert result.status == 200
+
+
+def validate_profile_id(_assert_name, assertation, result, resource, var):
+    logging.warning("Profile validation is not implemented yet")
+
+
 assert_rules = {
     "headerField": header_field,
     "responseCode": response_code,
     "resource": resource,
     "path": path,
+    "response": response,
+    "validateProfileId": validate_profile_id,
+    # "compareToSourceExpression": compare_to_source_expression,
+    # "expression": expression, ;;
+    ######
+    # not implemented operations
+    ######
     "compareToSourcePath": not_implemented_assert,
     "contentType": not_implemented_assert,
     "minimumId": not_implemented_assert,
     "navigationLinks": not_implemented_assert,
-    "response": not_implemented_assert,
-    "validateProfileId": not_implemented_assert,
 }
 
 
-def eval(assertation, result, resource, var):
+def eval(assertation, result, resource, var, fixtures):
+    # TODO rid of temporary hack
+    # pass fixtures as separated context item
+    var["__fixtures__"] = fixtures
     logging.warning("Check %s", assertation["description"])
     for assert_name, assert_eval in assert_rules.items():
         if assert_name in assertation:

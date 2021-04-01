@@ -20,12 +20,12 @@ env = {
 @pytest.mark.parametrize(
     "test_script",
     [
-        "testscript-example-history.json",
-        "testscript-example-multisystem.json",
-        "testscript-example-readtest.json",
-        "testscript-example-search.json",
-        "testscript-example-update.json",
         "testscript-example.json",
+        # "testscript-example-history.json",
+        # "testscript-example-multisystem.json",
+        # "testscript-example-readtest.json",
+        # "testscript-example-search.json",
+        # "testscript-example-update.json",
     ],
 )
 async def test_conformance(test_script):
