@@ -39,6 +39,33 @@
       ]
     }
   ],
+  "contained": [
+        {
+            "resourceType": "Patient",
+            "id": "example",
+            "name": [
+                {
+                    "use": "official",
+                    "given": [
+                        "Peter",
+                        "James"
+                    ],
+                    "family": "Chalmers"
+                }]
+        },
+      {
+          "resourceType": "Patient",
+          "id": "pat1",
+          "name": [
+              {
+                  "use": "official",
+                  "given": [
+                      "Donald"
+                  ],
+                  "family": "Duck"
+              }]
+      }
+    ],
   "purpose": "Patient (Conditional) Create, Update, Delete Operations",
   "copyright": "© HL7.org 2011+",
   "metadata": {
@@ -67,7 +94,7 @@
       "autocreate": false,
       "autodelete": false,
       "resource": {
-        "reference": "Patient/example",
+        "reference": "#Patient/example",
         "display": "Peter Chalmers"
       }
     },
@@ -76,7 +103,7 @@
       "autocreate": false,
       "autodelete": false,
       "resource": {
-        "reference": "Patient/pat1",
+        "reference": "#Patient/pat1",
         "display": "Donald Duck"
       }
     }

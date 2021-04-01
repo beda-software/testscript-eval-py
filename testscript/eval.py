@@ -36,7 +36,8 @@ def setup_variables(definition, fixtures, env):
             context = fixtures[var["sourceId"]]
             variables[name] = fhirpath(context, var["expression"], {})[0]
         else:
-            variables[name] = env[name]
+            variables[name] = env.get(name, var.get("defaultValue"))
+            assert variables[name], f"Missing {name} variable"
     return variables
 
 
@@ -60,14 +61,19 @@ async def eval_actions(client, actions, fixtures, variables):
             if "targetId" in operation:
                 operation_to_exec = fixtures[operation["targetId"]]["id"]
             else:
-                operation_to_exec = resolve_string_template(operation["params"], variables)
+                operation_to_exec = resolve_string_template(operation.get("params", ""), variables)
 
             operation_code = operation["type"]["code"]
 
             if operation_code == "update":
                 operation_code = "put"
-            if operation_code == "read":
+            elif operation_code in ("read", "search"):
                 operation_code = "get"
+            elif operation_code == "history":
+                operation_code = "get"
+                operation_to_exec = operation_to_exec + "/_history"
+            elif operation_code == "create":
+                operation_code = "post"
 
             data = None
 

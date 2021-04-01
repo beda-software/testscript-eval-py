@@ -16,9 +16,6 @@ def not_implemented_assert(assert_name, _assertation, _result, _resource, _var):
 
 
 def header_field(_assert_name, assertation, result, _resource, _var):
-    if assertation["direction"] == "request":
-        # Skip all request tests
-        return
     operator = assertation["operator"]
     header = assertation["headerField"]
     value = assertation.get("value")
@@ -50,9 +47,17 @@ def path(_assert_name, assertation, result, resource, var):
 
 
 def response(_assert_name, assertation, result, resource, var):
-    if assertation["response"] != "okay":
-        raise Exception("Response code f{assertation['response']} is not supported")
-    assert result.status == 200
+    response = assertation["response"]
+    if response == "okay":
+        assert result.status == 200
+    elif response == "notFound":
+        assert result.status == 404
+    elif response == "bad":
+        assert result.status == 400
+    elif response == "created":
+        assert result.status == 201
+    else:
+        raise Exception(f"Response code {assertation['response']} is not supported")
 
 
 def validate_profile_id(_assert_name, assertation, result, resource, var):
@@ -79,6 +84,17 @@ def minimum_id(_assert_name, assertation, result, resource, var):
         assert resource[k] == v
 
 
+def content_type(_assert_name, assertation, result, resource, var):
+    operator = assertation.get("operator", "equals")
+    value = assertation["contentType"]
+    res = result.headers["Content-Type"]
+    operations.eval(operator, res, value)
+
+
+def navigation_links(_assert_name, assertation, result, resource, var):
+    assert "link" in resource
+
+
 assert_rules = {
     "headerField": header_field,
     "responseCode": response_code,
@@ -88,12 +104,12 @@ assert_rules = {
     "validateProfileId": validate_profile_id,
     "compareToSourceExpression": compare_to_source_expression,
     "minimumId": minimum_id,
+    "contentType": content_type,
+    "navigationLinks": navigation_links,
     ######
     # not implemented operations
     ######
     "compareToSourcePath": not_implemented_assert,
-    "contentType": not_implemented_assert,
-    "navigationLinks": not_implemented_assert,
 }
 
 
@@ -103,5 +119,9 @@ def eval(assertation, result, resource, var, fixtures):
     var["--fixtures--"] = fixtures
     logging.warning("Check %s", assertation["description"])
     for assert_name, assert_eval in assert_rules.items():
+        if assertation.get("direction") == "request":
+            # Skip all request tests
+            logging.warning("Skip request validation")
+            continue
         if assert_name in assertation:
             assert_eval(assert_name, assertation, result, resource, var)

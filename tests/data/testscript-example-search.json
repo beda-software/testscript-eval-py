@@ -39,6 +39,21 @@
       ]
     }
   ],
+  "contained": [
+        {
+            "resourceType": "Patient",
+            "id": "example",
+            "name": [
+                {
+                    "use": "official",
+                    "given": [
+                        "Peter",
+                        "James"
+                    ],
+                    "family": "Chalmers"
+                }]
+        }
+    ],
   "purpose": "Patient Search Operation",
   "copyright": "© HL7.org 2011+",
   "metadata": {
@@ -66,7 +81,7 @@
       "autocreate": false,
       "autodelete": false,
       "resource": {
-        "reference": "Patient/example",
+        "reference": "#Patient/example",
         "display": "Peter Chalmers"
       }
     }
@@ -79,9 +94,9 @@
   ],
   "variable": [
     {
-      "name": "PatientCreateLocation",
-      "headerField": "Location",
-      "sourceId": "PatientCreateResponse"
+        "name": "createResourceId",
+        "expression": "Patient.id",
+        "sourceId": "fixture-patient-create"
     },
     {
       "name": "PatientSearchFamilyName",
@@ -92,11 +107,6 @@
       "name": "PatientSearchGivenName",
       "description": "Enter patient search criteria for a known given name on the target system",
       "hint": "[Given name]"
-    },
-    {
-      "name": "PatientSearchBundleTotal",
-      "description": "Evaluate the returned Patient searchset Bundle.total value",
-      "expression": "Bundle.total.toInteger()"
     }
   ],
   "setup": {
@@ -109,7 +119,7 @@
           },
           "resource": "Patient",
           "description": "Test simple search to verify server support.",
-          "accept": "xml",
+          "accept": "json",
           "encodeRequestUrl": true,
           "params": "?family=DONTEXPECTAMATCH&given=DONTEXPECTAMATCH"
         }
@@ -161,8 +171,8 @@
             },
             "resource": "Patient",
             "description": "Create a Patient resource and capture the returned HTTP Header Location.",
-            "accept": "xml",
-            "contentType": "xml",
+            "accept": "json",
+            "contentType": "json",
             "encodeRequestUrl": true,
             "responseId": "PatientCreateResponse",
             "sourceId": "fixture-patient-create"
@@ -191,7 +201,7 @@
               "code": "read"
             },
             "description": "Read the created Patient using the captured Location URL value.",
-            "accept": "xml",
+            "accept": "json",
             "encodeRequestUrl": true,
             "url": "${PatientCreateLocation}"
           }
@@ -225,7 +235,7 @@
             },
             "resource": "Patient",
             "description": "Search for Patient resources on the destination test system.",
-            "accept": "xml",
+            "accept": "json",
             "encodeRequestUrl": true,
             "params": "?family=${PatientSearchFamilyName}&given=${PatientSearchGivenName}"
           }
@@ -239,8 +249,8 @@
         },
         {
           "assert": {
-            "description": "Confirm that the returned format is XML.",
-            "contentType": "xml",
+            "description": "Confirm that the returned format is JSON.",
+            "contentType": "application/json",
             "warningOnly": false
           }
         },

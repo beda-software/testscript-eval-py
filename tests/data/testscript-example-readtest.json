@@ -90,7 +90,7 @@
             },
             "resource": "Patient",
             "description": "Read the known Patient resource on the destination test system using the user defined dynamic variable ${KnownPatientResourceId}.",
-            "accept": "xml",
+            "accept": "json",
             "encodeRequestUrl": true,
             "params": "/${KnownPatientResourceId}"
           }
@@ -104,8 +104,8 @@
         },
         {
           "assert": {
-            "description": "Confirm that the returned format is XML.",
-            "contentType": "xml",
+            "description": "Confirm that the returned format is JSON.",
+            "contentType": "application/json",
             "warningOnly": false
           }
         },
@@ -146,7 +146,7 @@
             },
             "resource": "Patient",
             "description": "Attempt to read the Parameters resource type. What we really want here is an illegal type but the build process won't allow that. Parameters is a valid resource which doesn't have an end-point so, this should fail.",
-            "accept": "xml",
+            "accept": "json",
             "encodeRequestUrl": true,
             "params": "/1"
           }
@@ -173,7 +173,7 @@
             },
             "resource": "Patient",
             "description": "Attempt to read the non-existing Patient resource on the destination test system using the user defined dynamic variable ${NonExistsPatientResourceId}.",
-            "accept": "xml",
+            "accept": "json",
             "encodeRequestUrl": true,
             "params": "/${NonExistsPatientResourceId}"
           }
@@ -182,33 +182,6 @@
           "assert": {
             "description": "Confirm that the returned HTTP status is 404(Not Found).",
             "response": "notFound",
-            "warningOnly": false
-          }
-        }
-      ]
-    },
-    {
-      "id": "R004",
-      "name": "Sprinkler Read Test R004",
-      "description": "Read a Patient using a known bad formatted resource id and validate response.",
-      "action": [
-        {
-          "operation": {
-            "type": {
-              "system": "http://terminology.hl7.org/CodeSystem/testscript-operation-codes",
-              "code": "read"
-            },
-            "resource": "Patient",
-            "description": "Attempt to read a Patient resource on the destination test system using known bad formatted resource id.",
-            "accept": "xml",
-            "encodeRequestUrl": true,
-            "params": "/ID-may-not-contain-CAPITALS"
-          }
-        },
-        {
-          "assert": {
-            "description": "Confirm that the returned HTTP status is 400(Bad Request).",
-            "response": "bad",
             "warningOnly": false
           }
         }

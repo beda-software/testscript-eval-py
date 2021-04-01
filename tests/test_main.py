@@ -13,6 +13,8 @@ def load_test(file_name):
 env = {
     "baseUrl": "http://localhost:8080/fhir",
     "authorization": "Basic cm9vdDpzZWNyZXQ=",
+    "PatientSearchFamilyName": "Peter",
+    "PatientSearchGivenName": "Chalmers",
 }
 
 
@@ -21,9 +23,9 @@ env = {
     "test_script",
     [
         "testscript-example.json",
-        # "testscript-example-history.json",
-        # "testscript-example-multisystem.json",
-        # "testscript-example-readtest.json",
+        "testscript-example-history.json",
+        "testscript-example-multisystem.json",
+        "testscript-example-readtest.json",
         # "testscript-example-search.json",
         # "testscript-example-update.json",
     ],
