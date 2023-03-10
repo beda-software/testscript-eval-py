@@ -1,12 +1,14 @@
 # testscript-eval-py
 ## Tests
-To run tests locally, copy `.env.tpl` to `.env` and specify `TESTS_AIDBOX_LICENSE_ID` and `TESTS_AIDBOX_LICENSE_KEY`.  
-You can get key and id from the https://license-ui.aidbox.app/
+To run tests locally specify `TESTS_AIDBOX_LICENSE` in the `.env` file
+You can get license from the https://aidbox.app/ui/portal/
 
+Run Aidbox`docker compose up -d`.
 
-Run Aidbox`docker-compose -f docker-compose.tests.yaml up -d`.
+Install project dependencies: `pipenv install --dev`
 
+Run `echo PYTHONPATH=. >> .env` to run tests properly
 
 Run tests ```
-PYTHONPATH='.' pytest
+pipenv run pytest
 ````

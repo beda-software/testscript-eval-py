@@ -22,7 +22,7 @@ known_first_party = ["testscript"]
 
 [tool.pytest.ini_options]
 minversion = "6.0"
-addopts = "-ra -q --color=yes --cov=testscript --cov-report=xml"
+addopts = "-ra -q --color=yes"
 testpaths = ["tests"]
 log_cli = true
 log_cli_level = "INFO"
