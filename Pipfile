@@ -8,7 +8,7 @@ anaconda = "*"
 jedi = ">=0.13.0"
 json-rpc = ">=1.8.1"
 service-factory = ">=0.1.5"
-black = "==20.8b1"
+black = "==23.1.0"
 pre-commit = "*"
 isort = "*"
 autoflake = "*"
@@ -20,7 +20,7 @@ ipython = "*"
 
 [packages]
 fhirpy = "*"
-fhirpathpy = {git = "https://github.com/beda-software/fhirpath-py.git"}
+fhirpathpy = "*"
 pytest = "*"
 jsonpath-ng = "*"
 pytest-asyncio = "*"

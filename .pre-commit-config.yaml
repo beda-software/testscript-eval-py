@@ -1,14 +1,14 @@
 repos:
   - repo: https://github.com/psf/black
-    rev: stable
+    rev: 23.1.0
     hooks:
       - id: black
-        language_version: python3.9
+        language_version: "3.9"
   - repo: https://github.com/pycqa/isort
-    rev: 5.5.2
+    rev: 5.12.0
     hooks:
       - id: isort
-        files: 'app/.*'
-      - id: isort
-        files: 'tests/.*'
-
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.4.0
+    hooks:
+      - id: check-yaml
