@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 100
-target-version = ['py39']
+target-version = ['py11']
 exclude = '''
 (
   /(
@@ -17,6 +17,7 @@ exclude = '''
 
 [tool.isort]
 profile = "black"
+line_length = 100
 default_section = "THIRDPARTY"
 known_first_party = ["testscript"]
 
