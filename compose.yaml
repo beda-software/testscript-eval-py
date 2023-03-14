@@ -11,7 +11,9 @@ services:
     environment:
       AIDBOX_LICENSE: ${TESTS_AIDBOX_LICENSE}
     ports:
-      - 8080:8080
+      - 8088:8080
+    volumes:
+      - ./zrc:/zrc
   devbox-db:
     image: healthsamurai/aidboxdb:14.5
     environment:
@@ -30,3 +32,24 @@ services:
       interval: 1s
       timeout: 20s
       retries: 100
+  sdc:
+    image: bedasoftware/aidbox-sdc:latest
+    command:
+      [
+        'pipenv',
+        'run',
+        'gunicorn',
+        'main:create_app',
+        '--worker-class',
+        'aiohttp.worker.GunicornWebWorker',
+        '-b',
+        '0.0.0.0:8081',
+        '--reload'
+      ]
+    depends_on:
+      devbox-healthcheck:
+        condition: service_healthy
+    env_file:
+      - .env.sdc
+    # Colored logs
+    tty: true

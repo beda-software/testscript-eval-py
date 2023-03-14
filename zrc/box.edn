@@ -1,0 +1,13 @@
+{ns box
+
+ import #{aidbox}
+
+ seed
+ {:zen/tags #{aidbox/service}
+  :engine aidbox/seed
+  :files ["seeds.ndjson.gz"]}
+
+ box
+ {:zen/tags #{aidbox/system}
+  :zen/desc "Test server"
+  :services {:seed seed}}}
