@@ -14,16 +14,19 @@ async def setup_fixtures(client, definition):
         if f.get("autodelete", False):
             raise Exception("Autocreate is not supported")
         reference = f["resource"]["reference"]
-        if not reference.startswith("#"):
-            raise Exception("Only local references is supported")
-        fixture_id = f["id"]
-        resource_type, id = reference[1:].split("/")
-        fixture = [
-            d
-            for d in definition["contained"]
-            if d["resourceType"] == resource_type and d["id"] == id
-        ][0]
-        fixtures[fixture_id] = fixture
+        if reference.startswith("#"):
+            fixture_id = f["id"]
+            resource_type, id = reference[1:].split("/")
+            fixture = [
+                d
+                for d in definition["contained"]
+                if d["resourceType"] == resource_type and d["id"] == id
+            ][0]
+            fixtures[fixture_id] = fixture
+        elif reference.startswith("file://"):
+            pass
+        else:
+            raise Exception(f"Reference '{reference}' is not supported")
 
     return fixtures
 
@@ -107,7 +110,6 @@ async def eval(definition, env):
 
     logging.warning("Testing")
     for test in definition.get("test", []):
-
         logging.warning("Test %s, %s", test["name"], test["description"])
         test_actions = test.get("action", [])
         await eval_actions(client, test_actions, fixtures, variables)
