@@ -45,7 +45,7 @@
     {
       "id": "allergies-questionnaire",
       "resource": {
-        "reference": "file://../resources/allergies-questionnaire.json"
+        "reference": "file://tests/resources/allergies-questionnaire.json"
       }
     },
     {
