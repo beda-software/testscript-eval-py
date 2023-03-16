@@ -1,6 +1,6 @@
 [tool.black]
 line-length = 100
-target-version = ['py11']
+target-version = ['py311']
 exclude = '''
 (
   /(
@@ -22,7 +22,7 @@ default_section = "THIRDPARTY"
 known_first_party = ["testscript"]
 
 [tool.pytest.ini_options]
-minversion = "6.0"
+minversion = "7.0"
 addopts = "-ra -q --color=yes"
 testpaths = ["tests"]
 log_cli = true

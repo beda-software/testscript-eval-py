@@ -3,7 +3,7 @@ repos:
     rev: 23.1.0
     hooks:
       - id: black
-        language_version: "3.9"
+        language_version: "3.11"
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0
     hooks:
