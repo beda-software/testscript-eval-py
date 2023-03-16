@@ -11,7 +11,7 @@ def load_test(file_name):
 
 
 env = {
-    "baseUrl": "http://localhost:8080/fhir",
+    "baseUrl": "http://localhost:8088",
     "authorization": "Basic cm9vdDpzZWNyZXQ=",
     "PatientSearchFamilyName": "Peter",
     "PatientSearchGivenName": "Chalmers",

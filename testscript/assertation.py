@@ -1,4 +1,5 @@
 import logging
+import re
 
 from fhirpathpy import evaluate as fhirpath
 from jsonpath_ng.ext import parse
@@ -64,6 +65,15 @@ def validate_profile_id(_assert_name, assertation, result, resource, var):
     logging.warning("Profile validation is not implemented yet")
 
 
+def parse_variable_in_string(string: str, variables):
+    def parse_variable(matchobj: re.Match):
+        (var_name,) = matchobj.groups()
+
+        return variables[var_name]
+
+    return re.sub(r"\$\{([\w\-\d]+)+\}", parse_variable, string)
+
+
 def compare_to_source_expression(_assert_name, assertation, result, resource, var):
     fixtures = var["--fixtures--"]
     id = assertation["compareToSourceId"]
@@ -74,6 +84,20 @@ def compare_to_source_expression(_assert_name, assertation, result, resource, va
     vexp = assertation["expression"]
     res = fhirpath(resource, vexp, {})
     operations.eval(operator, res, val)
+
+
+def compare_to_response_expression(_assert_name, assertation, result, resource, var):
+    fixtures = var["--fixtures--"]
+    id = assertation["sourceId"]
+    fixture = fixtures[id]
+    expression = assertation["expression"]
+    expression_result = fhirpath(fixture, expression, {})
+    if len(expression_result) > 1:
+        logging.warning("Expression '%s' returns more then one value")
+    operator = assertation.get("operator", "equals")
+    value = parse_variable_in_string(assertation["value"], var)
+
+    operations.eval(operator, expression_result[0], value)
 
 
 def minimum_id(_assert_name, assertation, result, resource, var):
@@ -110,6 +134,7 @@ assert_rules = {
     # not implemented operations
     ######
     "compareToSourcePath": not_implemented_assert,
+    "sourceId": compare_to_response_expression,
 }
 
 

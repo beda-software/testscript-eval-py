@@ -98,6 +98,8 @@ async def eval_actions(client, actions, fixtures, variables):
                 operation_to_exec, method=operation.get("method", operation_code), data=data
             )
 
+            if "responseId" in operation:
+                fixtures[operation["responseId"]] = resource
         else:
             assert response
             assertation.eval(action["assert"], response, resource, variables, fixtures)

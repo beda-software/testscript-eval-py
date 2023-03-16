@@ -4,6 +4,20 @@
   "url": "https://beda.software/TestScript/vitals",
   "name": "vitals-questionnaire-sdc-tests",
   "status": "draft",
+  "date": "2023-03-17",
+  "publisher": "Beda Software",
+  "contact": [
+    {
+      "name": "Support",
+      "telecom": [
+        {
+          "system": "email",
+          "value": "ilya@beda.software",
+          "use": "work"
+        }
+      ]
+    }
+  ],
   "contained": [
     {
       "resourceType": "Patient",
@@ -83,10 +97,11 @@
         {
           "assert": {
             "description": "check populated patient ID",
-            "sourceId": "populate-response",
             "resource": "QuestionnaireResponse",
+            "sourceId": "populate-response",
             "expression": "QuestionnaireResponse.repeat(item).where(linkId='patientId').answer.value.string",
-            "value": "${launched-patient-id}"
+            "value": "${launched-patient-id}",
+            "operator": "equals"
           }
         }
       ]
