@@ -1,5 +1,9 @@
+import json
 import logging
+import os
+import urllib
 
+import aiofiles
 from fhirpathpy import evaluate as fhirpath
 
 from testscript import assertation
@@ -14,8 +18,8 @@ async def setup_fixtures(client, definition):
         if f.get("autodelete", False):
             raise Exception("Autocreate is not supported")
         reference = f["resource"]["reference"]
+        fixture_id = f["id"]
         if reference.startswith("#"):
-            fixture_id = f["id"]
             resource_type, id = reference[1:].split("/")
             fixture = [
                 d
@@ -24,10 +28,14 @@ async def setup_fixtures(client, definition):
             ][0]
             fixtures[fixture_id] = fixture
         elif reference.startswith("file://"):
-            pass
+            root_dir = os.path.dirname(os.path.abspath(__name__))
+            parsed_url = urllib.parse.urlsplit(reference)
+            file_path = os.path.join(root_dir, parsed_url.netloc) + parsed_url.path
+            async with aiofiles.open(file_path) as f:
+                content = await f.read()
+                fixtures[fixture_id] = json.loads(content)
         else:
             raise Exception(f"Reference '{reference}' is not supported")
-
     return fixtures
 
 
@@ -77,6 +85,9 @@ async def eval_actions(client, actions, fixtures, variables):
                 operation_to_exec = operation_to_exec + "/_history"
             elif operation_code == "create":
                 operation_code = "post"
+            elif operation_code == "populate":
+                operation_code = "post"
+                operation_to_exec = operation_to_exec + "/$populate"
 
             data = None
 
