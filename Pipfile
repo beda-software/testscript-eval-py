@@ -17,6 +17,7 @@ pytest = "~=7.2.2"
 pytest-asyncio = "~=0.20.3"
 jsonpath-ng = "~=1.5.3"
 funcy = "~=1.18"
+aiofiles = "~=23.1.0"
 
 [requires]
 python_version = "3.11"
