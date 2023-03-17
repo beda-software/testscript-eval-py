@@ -43,12 +43,12 @@
   "fixture": [
     {
       "id": "launched-patient",
-      "resource": { "reference": "file://tests/resources/patient.json" }
+      "resource": { "reference": "file://tests/resources/patient.yaml" }
     },
     {
       "id": "allergies-questionnaire-from-file",
       "resource": {
-        "reference": "file://tests/resources/allergies-questionnaire.json"
+        "reference": "file://tests/resources/allergies-questionnaire.yaml"
       }
     },
     {

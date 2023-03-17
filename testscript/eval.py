@@ -5,6 +5,7 @@ import re
 import urllib
 
 import aiofiles
+import yaml
 from fhirpathpy import evaluate as fhirpath
 
 from testscript import assertation
@@ -34,7 +35,7 @@ async def setup_fixtures(client: RawResultAsyncFHIRClient, definition):
             file_path = os.path.join(root_dir, parsed_url.netloc) + parsed_url.path
             async with aiofiles.open(file_path) as f:
                 content = await f.read()
-                fixtures[fixture_id] = json.loads(content)
+                fixtures[fixture_id] = yaml.safe_load(content)
         # relative references to FHIR server baseUrl
         elif re.match(r"^[A-Z]", reference):
             _response, resource = await client.execute(reference, method="GET")

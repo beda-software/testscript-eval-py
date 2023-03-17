@@ -1,0 +1,8 @@
+resourceType: Patient
+id: example
+name:
+  - use: official
+    given:
+      - Peter
+      - James
+    family: Chalmers
