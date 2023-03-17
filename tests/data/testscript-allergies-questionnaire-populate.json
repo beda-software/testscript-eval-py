@@ -46,9 +46,15 @@
       "resource": { "reference": "file://tests/resources/patient.json" }
     },
     {
-      "id": "allergies-questionnaire",
+      "id": "allergies-questionnaire-from-file",
       "resource": {
         "reference": "file://tests/resources/allergies-questionnaire.json"
+      }
+    },
+    {
+      "id": "allergies-questionnaire-from-server",
+      "resource": {
+        "reference": "Questionnaire/allergies"
       }
     },
     {
@@ -63,6 +69,30 @@
       "expression": "Patient.id"
     }
   ],
+  "setup": {
+    "action": [
+      {
+        "operation": {
+          "type": {
+            "system": "http://terminology.hl7.org/CodeSystem/testscript-operation-codes",
+            "code": "read"
+          },
+          "resource": "Questionnaire",
+          "description": "Read the allergies questionnaire resource on the test server using the id from allergies-questionnaire. Verify contents.",
+          "encodeRequestUrl": true,
+          "targetId": "allergies-questionnaire-from-server",
+          "responseId": "allergies-questionnaire-resource"
+        }
+      },
+      {
+        "assert": {
+          "description": "Confirm that the returned HTTP status is 200(OK).",
+          "direction": "response",
+          "response": "okay"
+        }
+      }
+    ]
+  },
   "test": [
     {
       "name": "allergies-populate",
@@ -78,7 +108,7 @@
             "description": "Questionnaire population",
             "accept": "json",
             "method": "post",
-            "targetId": "allergies-questionnaire",
+            "targetId": "allergies-questionnaire-from-server",
             "sourceId": "launch-context-params",
             "responseId": "populate-response"
           }
