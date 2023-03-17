@@ -86,10 +86,10 @@ def compare_to_source_expression(_assert_name, assertation, result, resource, va
     operations.eval(operator, res, val)
 
 
-def compare_to_response_expression(_assert_name, assertation, result, resource, var):
+def compare_response_expression_to_value(_assert_name, assertation, result, resource, var):
     fixtures = var["--fixtures--"]
-    id = assertation["sourceId"]
-    fixture = fixtures[id]
+    id = assertation.get("sourceId")
+    fixture = fixtures[id] if id else resource
     expression = assertation["expression"]
     expression_result = fhirpath(fixture, expression, {})
     if len(expression_result) > 1:
@@ -134,7 +134,7 @@ assert_rules = {
     # not implemented operations
     ######
     "compareToSourcePath": not_implemented_assert,
-    "sourceId": compare_to_response_expression,
+    "value": compare_response_expression_to_value,
 }
 
 
