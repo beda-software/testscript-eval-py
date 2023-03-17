@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 import urllib
 
 import aiofiles
@@ -10,7 +11,7 @@ from testscript import assertation
 from testscript.misc import RawResultAsyncFHIRClient, resolve_string_template
 
 
-async def setup_fixtures(client, definition):
+async def setup_fixtures(client: RawResultAsyncFHIRClient, definition):
     fixtures = {}
     for f in definition.get("fixture", []):
         if f.get("autocreate", False):
@@ -34,6 +35,10 @@ async def setup_fixtures(client, definition):
             async with aiofiles.open(file_path) as f:
                 content = await f.read()
                 fixtures[fixture_id] = json.loads(content)
+        # relative references to FHIR server baseUrl
+        elif re.match(r"^[A-Z]", reference):
+            _response, resource = await client.execute(reference, method="GET")
+            fixtures[fixture_id] = resource
         else:
             raise Exception(f"Reference '{reference}' is not supported")
     return fixtures

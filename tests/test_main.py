@@ -28,6 +28,7 @@ env = {
         "testscript-example-readtest.json",
         # "testscript-example-search.json",
         # "testscript-example-update.json",
+        "testscript-allergies-questionnaire-populate.json",
     ],
 )
 async def test_conformance(test_script):
