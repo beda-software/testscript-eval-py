@@ -1,14 +1,14 @@
-import json
 import os
 
 import pytest
+import yaml
 
 import testscript
 
 
 def load_test(file_name):
     with open(f"tests/data/{file_name}") as f:
-        return json.loads(f.read())
+        return yaml.safe_load(f)
 
 
 env = {
@@ -23,13 +23,13 @@ env = {
 @pytest.mark.parametrize(
     "test_script",
     [
-        "testscript-example.json",
-        "testscript-example-history.json",
-        "testscript-example-multisystem.json",
-        "testscript-example-readtest.json",
-        # "testscript-example-search.json",
-        # "testscript-example-update.json",
-        "testscript-allergies-questionnaire-populate.json",
+        "testscript-example.yaml",
+        "testscript-example-history.yaml",
+        "testscript-example-multisystem.yaml",
+        "testscript-example-readtest.yaml",
+        # "testscript-example-search.yaml",
+        # "testscript-example-update.yaml",
+        "testscript-allergies-questionnaire-populate.yaml",
     ],
 )
 async def test_conformance(test_script):
