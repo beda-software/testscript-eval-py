@@ -20,17 +20,6 @@
   ],
   "contained": [
     {
-      "resourceType": "Patient",
-      "id": "example",
-      "name": [
-        {
-          "use": "official",
-          "given": ["Peter", "James"],
-          "family": "Chalmers"
-        }
-      ]
-    },
-    {
       "resourceType": "Parameters",
       "id": "populate-launch-context-params",
       "parameter": [
@@ -54,7 +43,7 @@
   "fixture": [
     {
       "id": "launched-patient",
-      "resource": { "reference": "#Patient/example" }
+      "resource": { "reference": "file://tests/resources/patient.json" }
     },
     {
       "id": "allergies-questionnaire",
