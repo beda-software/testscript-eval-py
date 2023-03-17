@@ -5,28 +5,11 @@ on:
   - pull_request
 jobs:
   build:
-    name: Run tests
+    name: Prepare environment and run tests
     runs-on: ubuntu-latest
-    env:
-      PYTHONPATH: "."
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-          cache: 'pipenv'
-      - name: Install pipenv
-        run: pip install pipenv
-      - name: Install dependencies
-        run: pipenv install --dev
-      - name: Run FHIR Server
+      - name: Run tests
         env:
           TESTS_AIDBOX_LICENSE: ${{ secrets.TESTS_AIDBOX_LICENSE}}
-        run: |
-          docker compose pull -q
-          docker compose up -d
-      - name: Run tests
-        run: |
-          echo PYTHONPATH=. > .env
-          pipenv run pytest
+        run: make up

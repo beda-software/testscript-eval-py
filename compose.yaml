@@ -52,3 +52,27 @@ services:
     env_file:
       - .env.sdc
     tty: true
+  sdc-healthcheck:
+    image: curlimages/curl
+    entrypoint: /bin/sleep 10000
+    depends_on:
+      - sdc
+    healthcheck:
+      test: curl --fail http://sdc:8081/live || exit 1
+      interval: 1s
+      timeout: 20s
+      retries: 100
+  app:
+    build: .
+    depends_on:
+      devbox-healthcheck:
+        condition:
+          service_healthy
+      sdc-healthcheck:
+        condition:
+          service_healthy
+    environment:
+      - PYTHONPATH=.
+    volumes:
+      - .:/app
+    command: ["pipenv", "run", "pytest"]

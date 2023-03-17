@@ -1,4 +1,5 @@
 import json
+import os
 
 import pytest
 
@@ -11,7 +12,7 @@ def load_test(file_name):
 
 
 env = {
-    "baseUrl": "http://localhost:8088",
+    "baseUrl": os.environ.get("FHIR_SERVER_BASE_URL", "http://devbox:8080"),
     "authorization": "Basic cm9vdDpzZWNyZXQ=",
     "PatientSearchFamilyName": "Peter",
     "PatientSearchGivenName": "Chalmers",
