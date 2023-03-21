@@ -1,6 +1,6 @@
 resourceType: TestScript
-url: https://beda.software/TestScript/vitals
-name: vitals-questionnaire-sdc-tests
+url: https://beda.software/TestScript/allergies
+name: allergies-questionnaire-sdc-tests
 status: draft
 date: "2023-03-17"
 publisher: Beda Software
