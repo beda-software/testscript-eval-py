@@ -1,14 +1,20 @@
 import logging
 import os
 import re
-import urllib
+from urllib.parse import parse_qs, urlparse, urlsplit
 
 import aiofiles
 import yaml
 from fhirpathpy import evaluate as fhirpath
+from yamlinclude import YamlIncludeConstructor
 
 from testscript import assertation
 from testscript.misc import RawResultAsyncFHIRClient, resolve_string_template
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__name__))
+YamlIncludeConstructor.add_to_loader_class(
+    loader_class=yaml.SafeLoader, base_dir=f"{ROOT_DIR}/tests/resources"
+)
 
 
 async def setup_fixtures(client: RawResultAsyncFHIRClient, definition):
@@ -29,9 +35,8 @@ async def setup_fixtures(client: RawResultAsyncFHIRClient, definition):
             ][0]
             fixtures[fixture_id] = fixture
         elif reference.startswith("file://"):
-            root_dir = os.path.dirname(os.path.abspath(__name__))
-            parsed_url = urllib.parse.urlsplit(reference)
-            file_path = os.path.join(root_dir, parsed_url.netloc) + parsed_url.path
+            parsed_url = urlsplit(reference)
+            file_path = os.path.join(ROOT_DIR, parsed_url.netloc) + parsed_url.path
             async with aiofiles.open(file_path) as f:
                 content = await f.read()
                 fixtures[fixture_id] = yaml.safe_load(content)
@@ -62,6 +67,13 @@ async def setup(client, definition, fixtures, variables):
         return
 
     actions = definition["setup"]["action"]
+    return await eval_actions(client, actions, fixtures, variables)
+
+
+async def teardown(client, definition, fixtures, variables):
+    if "teardown" not in definition:
+        return
+    actions = definition["teardown"]["action"]
     return await eval_actions(client, actions, fixtures, variables)
 
 
@@ -101,9 +113,12 @@ async def eval_actions(client, actions, fixtures, variables):
 
             if "sourceId" in operation:
                 data = fixtures[operation["sourceId"]]
-
+            operation_to_exec_parse_result = urlparse(operation_to_exec)
             response, resource = await resource.execute(
-                operation_to_exec, method=operation.get("method", operation_code), data=data
+                operation_to_exec_parse_result.path,
+                method=operation.get("method", operation_code),
+                data=data,
+                params=parse_qs(operation_to_exec_parse_result.query),
             )
 
             if "responseId" in operation:
@@ -122,18 +137,18 @@ async def eval(definition, env):
 
     logging.warning("Loading fixtures")
     fixtures = await setup_fixtures(client, definition)
-
     logging.warning("Loading variables")
     variables = setup_variables(definition, fixtures, env)
 
-    logging.warning("Setup")
-    await setup(client, definition, fixtures, variables)
+    try:
+        logging.warning("Setup")
+        await setup(client, definition, fixtures, variables)
 
-    logging.warning("Testing")
-    for test in definition.get("test", []):
-        logging.warning("Test %s, %s", test["name"], test["description"])
-        test_actions = test.get("action", [])
-        await eval_actions(client, test_actions, fixtures, variables)
-
-    # logging.warning("Teardown")
-    # TODO implement teardown
+        logging.warning("Testing")
+        for test in definition.get("test", []):
+            logging.warning("Test %s, %s", test["name"], test["description"])
+            test_actions = test.get("action", [])
+            await eval_actions(client, test_actions, fixtures, variables)
+    finally:
+        logging.warning("Teardown")
+        await teardown(client, definition, fixtures, variables)

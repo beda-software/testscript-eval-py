@@ -50,15 +50,15 @@ def path(_assert_name, assertation, result, resource, var):
 def response(_assert_name, assertation, result, resource, var):
     response = assertation["response"]
     if response == "okay":
-        assert result.status == 200
+        assert result.status == 200, f"Expected status 200 (okay), got {result.status}"
     elif response == "notFound":
-        assert result.status == 404
+        assert result.status == 404, f"Expected status 404 (notFound), got {result.status}"
     elif response == "bad":
-        assert result.status == 400
+        assert result.status == 400, f"Expected status 400 (bad), got {result.status}"
     elif response == "created":
-        assert result.status == 201
+        assert result.status == 201, f"Expected status 201 (created), got {result.status}"
     else:
-        raise Exception(f"Response code {assertation['response']} is not supported")
+        raise Exception(f"Response code {response.status} is not supported")
 
 
 def validate_profile_id(_assert_name, assertation, result, resource, var):
@@ -95,8 +95,9 @@ def compare_response_expression_to_value(_assert_name, assertation, result, reso
     if len(expression_result) > 1:
         logging.warning("Expression '%s' returns more then one value")
     operator = assertation.get("operator", "equals")
-    value = parse_variable_in_string(assertation["value"], var)
-
+    value = assertation["value"]
+    if type(value) == str:
+        value = parse_variable_in_string(assertation["value"], var)
     operations.eval(operator, expression_result[0], value)
 
 
@@ -142,7 +143,7 @@ def eval(assertation, result, resource, var, fixtures):
     # TODO rid of temporary hack
     # pass fixtures as separated context item
     var["--fixtures--"] = fixtures
-    logging.warning("Check %s", assertation["description"])
+    logging.warning("%s", assertation["description"])
     for assert_name, assert_eval in assert_rules.items():
         if assertation.get("direction") == "request":
             # Skip all request tests

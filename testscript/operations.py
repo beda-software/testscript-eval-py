@@ -26,7 +26,7 @@ def exists(_operation, source, _value):
 
 
 def equals(_operation, source, value):
-    assert source == value
+    assert source == value, f"Got {source}, expected {value}"
 
 
 def not_empty(_operation, source, _value):

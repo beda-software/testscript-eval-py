@@ -1,0 +1,26 @@
+resourceType: QuestionnaireResponse
+questionnaire: null
+item:
+  - linkId: patientId
+    answer:
+      - value:
+          string: example
+  - linkId: patientName
+    answer:
+      - value:
+          string: Peter Chalmers
+  - linkId: height
+    answer:
+      - value:
+          integer: 180
+  - linkId: weight
+    answer:
+      - value:
+          integer: 69
+  - linkId: blood-pressure
+    item:
+      - linkId: blood-pressure-systolic-diastolic
+  - linkId: bmi
+    answer:
+      - value:
+          integer: 21.3

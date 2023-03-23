@@ -23,7 +23,7 @@ known_first_party = ["testscript"]
 
 [tool.pytest.ini_options]
 minversion = "7.0"
-addopts = "-ra -q --color=yes"
+addopts = "-ra -q --color=yes --disable-warnings"
 testpaths = ["tests"]
 log_cli = true
 log_cli_level = "INFO"
