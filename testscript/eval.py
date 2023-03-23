@@ -93,6 +93,9 @@ async def eval_actions(client, actions, fixtures, variables):
             elif operation_code == "populate":
                 operation_code = "post"
                 operation_to_exec = operation_to_exec + "/$populate"
+            elif operation_code == "extract":
+                operation_code = "post"
+                operation_to_exec = operation_to_exec + "/$extract"
 
             data = None
 

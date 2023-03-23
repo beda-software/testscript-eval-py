@@ -34,27 +34,30 @@ fixture:
   - id: launch-context-params
     resource:
       reference: "#Parameters/populate-launch-context-params"
+  - id: vitals-extract-parameters-fixture
+    resource:
+      reference: file://tests/resources/vitals-extract-request-body.yaml
 variable:
   - name: launched-patient-id
     sourceId: launched-patient
     expression: Patient.id
-setup:
-  action:
-    - operation:
-        type:
-          system: http://terminology.hl7.org/CodeSystem/testscript-operation-codes
-          code: read
-        resource: Questionnaire
-        description:
-          Read the vitals questionnaire resource on the test server using
-          the id from vitals-questionnaire-fixture. Verify contents.
-        encodeRequestUrl: true
-        targetId: vitals-questionnaire-fixture
-        responseId: vitals-questionnaire-resource
-    - assert:
-        description: Confirm that the returned HTTP status is 200(OK).
-        direction: response
-        response: okay
+# setup:
+#   action:
+#     - operation:
+#         type:
+#           system: http://terminology.hl7.org/CodeSystem/testscript-operation-codes
+#           code: read
+#         resource: Questionnaire
+#         description:
+#           Read the vitals questionnaire resource on the test server using
+#           the id from vitals-questionnaire-fixture. Verify contents.
+#         encodeRequestUrl: true
+#         targetId: vitals-questionnaire-fixture
+#         responseId: vitals-questionnaire-resource
+#     - assert:
+#         description: Confirm that the returned HTTP status is 200(OK).
+#         direction: response
+#         response: okay
 test:
   - name: vitals-populate
     description: >
@@ -79,3 +82,23 @@ test:
           expression: QuestionnaireResponse.repeat(item).where(linkId='patientId').answer.value.string
           value: "${launched-patient-id}"
           operator: equals
+  - name: vitals-extract
+    description: >
+      Run SDC $extract against the vitals questionnaire
+      and check created resources
+    action:
+      - operation:
+          type:
+            system: http://hl7.org/fhir/uv/sdc/OperationDefinition/QuestionnaireResponse-extract
+            code: extract
+          resource: Questionnaire
+          description: Questionnaire data extract
+          accept: json
+          method: post
+          targetId: vitals-questionnaire-fixture
+          sourceId: vitals-extract-parameters-fixture
+          responseId: extract-response
+      - assert:
+          description: Confirm that the extract returned HTTP status is 200(OK).
+          direction: response
+          response: okay
