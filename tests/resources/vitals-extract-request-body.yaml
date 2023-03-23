@@ -9,4 +9,4 @@ parameter:
 - name: Encounter
   resource:
     resourceType: Encounter
-    id: example
+    id: test-patient

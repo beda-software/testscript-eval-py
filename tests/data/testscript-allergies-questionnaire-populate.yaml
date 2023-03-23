@@ -17,7 +17,7 @@ contained:
       - name: Patient
         resource:
           resourceType: Patient
-          id: example
+          id: test-patient
           name:
             - use: official
               given:
@@ -80,4 +80,3 @@ test:
           expression: QuestionnaireResponse.repeat(item).where(linkId='patientId').answer.value.string
           value: "${launched-patient-id}"
           operator: equals
-teardown: {}

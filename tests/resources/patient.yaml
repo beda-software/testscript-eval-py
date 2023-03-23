@@ -1,5 +1,5 @@
 resourceType: Patient
-id: example
+id: test-patient
 name:
   - use: official
     given:

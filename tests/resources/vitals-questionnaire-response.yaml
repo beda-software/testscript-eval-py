@@ -4,7 +4,7 @@ item:
   - linkId: patientId
     answer:
       - value:
-          string: example
+          string: test-patient
   - linkId: patientName
     answer:
       - value:

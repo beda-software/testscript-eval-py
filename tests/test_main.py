@@ -30,6 +30,7 @@ env = {
         # "testscript-example-search.yaml",
         # "testscript-example-update.yaml",
         "testscript-allergies-questionnaire-populate.yaml",
+        "testscript-vitals-questionnaire.yaml",
     ],
 )
 async def test_conformance(test_script):
