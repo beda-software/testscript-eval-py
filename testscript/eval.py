@@ -77,44 +77,48 @@ async def teardown(client, definition, fixtures, variables):
     return await eval_actions(client, actions, fixtures, variables)
 
 
-async def eval_actions(client, actions, fixtures, variables):
+async def eval_actions(client: RawResultAsyncFHIRClient, actions, fixtures, variables):
     response = None
     resource = None
     for action in actions:
         if "operation" in action:
             operation = action["operation"]
             logging.warning("%s", operation["description"])
-            resource = client.resource(operation["resource"])
+            operation_to_exec = ""
+            if "resource" in operation:
+                operation_to_exec += operation["resource"]
 
             if "targetId" in operation:
-                operation_to_exec = fixtures[operation["targetId"]]["id"]
+                operation_to_exec += f"/{fixtures[operation['targetId']]['id']}"
             else:
-                operation_to_exec = resolve_string_template(operation.get("params", ""), variables)
+                operation_to_exec += resolve_string_template(operation.get("params", ""), variables)
 
-            operation_code = operation["type"]["code"]
+            operation_code = operation.get("method", "get")
+            if "type" in operation:
+                operation_code = operation["type"]["code"]
 
-            if operation_code == "update":
-                operation_code = "put"
-            elif operation_code in ("read", "search"):
-                operation_code = "get"
-            elif operation_code == "history":
-                operation_code = "get"
-                operation_to_exec = operation_to_exec + "/_history"
-            elif operation_code == "create":
-                operation_code = "post"
-            elif operation_code == "populate":
-                operation_code = "post"
-                operation_to_exec = operation_to_exec + "/$populate"
-            elif operation_code == "extract":
-                operation_code = "post"
-                operation_to_exec = operation_to_exec + "/$extract"
+                if operation_code == "update":
+                    operation_code = "put"
+                elif operation_code in ("read", "search"):
+                    operation_code = "get"
+                elif operation_code == "history":
+                    operation_code = "get"
+                    operation_to_exec += "/_history"
+                elif operation_code == "create":
+                    operation_code = "post"
+                elif operation_code == "populate":
+                    operation_code = "post"
+                    operation_to_exec += "/$populate"
+                elif operation_code == "extract":
+                    operation_code = "post"
+                    operation_to_exec += "/$extract"
 
             data = None
 
             if "sourceId" in operation:
                 data = fixtures[operation["sourceId"]]
             operation_to_exec_parse_result = urlparse(operation_to_exec)
-            response, resource = await resource.execute(
+            response, resource = await client.execute(
                 operation_to_exec_parse_result.path,
                 method=operation.get("method", operation_code),
                 data=data,

@@ -126,6 +126,7 @@ test:
           description: Check body height observation is exists
           sourceId: searched-observations
           expression: Bundle.entry.repeat(resource).code.coding.where(code='8302-2').exists()
+          # Use eval operator instead
           operator: equals
           value: true
 teardown:
@@ -139,12 +140,7 @@ teardown:
         description:
           Delete the patient resource on the test server using the id from
           launched-patient fixture.
-        encodeRequestUrl: true
     - operation:
-        type:
-          system: http://terminology.hl7.org/CodeSystem/testscript-operation-codes
-          code: delete
-        resource: Observation
-        params: "?patient=${launched-patient-id}"
-        description: Delete patient observations on the test server
-        encodeRequestUrl: true
+        method: get
+        params: "$query/clear-patient-observations?patient=${launched-patient-id}"
+        description: Delete patient observations on the test server via AidboxQuery
