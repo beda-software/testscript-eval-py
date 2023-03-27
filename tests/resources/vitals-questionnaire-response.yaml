@@ -8,19 +8,40 @@ item:
   - linkId: patientName
     answer:
       - value:
-          string: Peter Chalmers
+          string: Andres Peters
   - linkId: height
     answer:
       - value:
-          integer: 180
+          integer: 183
   - linkId: weight
     answer:
       - value:
-          integer: 69
+          integer: 73
   - linkId: blood-pressure
     item:
       - linkId: blood-pressure-systolic-diastolic
+        item:
+          - linkId: blood-pressure-systolic
+            answer:
+              - value:
+                  integer: 120
+          - linkId: blood-pressure-diastolic
+            answer:
+              - value:
+                  integer: 80
+      - linkId: blood-pressure-positions
+        answer:
+          - value:
+              Coding:
+                code: sitting
+                display: Sitting
+      - linkId: blood-pressure-arm
+        answer:
+          - value:
+              Coding:
+                code: biceps-left
+                display: Biceps left
   - linkId: bmi
     answer:
       - value:
-          integer: 21.3
+          integer: 21.8

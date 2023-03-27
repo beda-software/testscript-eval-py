@@ -121,7 +121,7 @@ test:
           resource: Bundle
           expression: Bundle.total
           operator: equals
-          value: 8
+          value: 4
       - assert:
           description: Check body height observation is exists
           sourceId: searched-observations
