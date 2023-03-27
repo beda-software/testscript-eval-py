@@ -37,6 +37,9 @@ fixture:
   - id: vitals-extract-parameters-fixture
     resource:
       reference: file://tests/resources/vitals-extract-request-body.yaml
+  - id: vitals-questionnaire-response
+    resource:
+      reference: file://tests/resources/vitals-questionnaire-response.yaml
 variable:
   - name: launched-patient-id
     sourceId: launched-patient
@@ -123,10 +126,38 @@ test:
           operator: equals
           value: 4
       - assert:
-          description: Check body height observation is exists
-          sourceId: searched-observations
-          expression: Bundle.entry.repeat(resource).code.coding.where(code='8302-2').exists()
-          # Use eval operator instead
+          description: Check body height observation (LOINC code is 8302-2) has correct value
+          compareToSourceId: vitals-questionnaire-response
+          compareToSourceExpression: QuestionnaireResponse.repeat(item).where(linkId='height').answer.children().integer
+          expression: Bundle.entry.repeat(resource).where(code.coding.code='8302-2').value.Quantity.value
+          operator: equals
+      - assert:
+          description: Check body weight observation (LOINC code is 29463-7) has correct value
+          compareToSourceId: vitals-questionnaire-response
+          compareToSourceExpression: QuestionnaireResponse.repeat(item).where(linkId='weight').answer.children().integer
+          expression: Bundle.entry.repeat(resource).where(code.coding.code='29463-7').value.Quantity.value
+          operator: equals
+      - assert:
+          description: Check BMI observation (LOINC code is 39156-5) has correct value
+          compareToSourceId: vitals-questionnaire-response
+          compareToSourceExpression: QuestionnaireResponse.repeat(item).where(linkId='bmi').answer.children().integer
+          expression: Bundle.entry.repeat(resource).where(code.coding.code='39156-5').value.Quantity.value
+          operator: equals
+      - assert:
+          description: Check blood pressure (LOINC code is 85354-9) has correct value for systolic (8480-6)
+          compareToSourceId: vitals-questionnaire-response
+          compareToSourceExpression: QuestionnaireResponse.repeat(item).where(linkId='blood-pressure-systolic').answer.children().integer
+          expression: Bundle.entry.repeat(resource).where(code.coding.code='85354-9').component.where(code.coding.code='8480-6').children().children().value
+          operator: equals
+      - assert:
+          description: Check blood pressure (LOINC code is 85354-9) has correct value for systolic (8480-6)
+          compareToSourceId: vitals-questionnaire-response
+          compareToSourceExpression: QuestionnaireResponse.repeat(item).where(linkId='blood-pressure-systolic').answer.children().integer
+          expression: Bundle.entry.repeat(resource).where(code.coding.code='85354-9').component.where(code.coding.code='8480-6').children().children().value
+          operator: equals
+      - assert:
+          description: Check the patient with ID 'test-patient' is the subject for all created observations
+          expression: Bundle.entry.repeat(resource).subject.id.all($this = 'test-patient')
           operator: equals
           value: true
 teardown:
