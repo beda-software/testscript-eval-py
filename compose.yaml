@@ -72,7 +72,9 @@ services:
         condition:
           service_healthy
     environment:
-      - PYTHONPATH=.
+      PYTHONPATH: .
+      FHIR_SERVER_AUTHORIZATION: Basic cm9vdDpzZWNyZXQ=
+      FHIR_SERVER_BASE_URL: http://devbox:8080
     volumes:
       - .:/app
     command: ["pipenv", "run", "pytest"]
