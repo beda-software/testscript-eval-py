@@ -28,5 +28,5 @@ testpaths = ["tests"]
 log_cli = true
 log_cli_level = "INFO"
 
-[tool.poetry]
-exclude = ["zrc"]
+[tool.setuptools]
+py-modules = ["testscript"]
