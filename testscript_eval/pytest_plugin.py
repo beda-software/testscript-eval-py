@@ -5,7 +5,7 @@ import pytest
 import yaml
 from pytest_asyncio.plugin import pytest_runtest_setup
 
-import testscript
+import testscript_eval
 
 
 def pytest_collect_file(parent, file_path):
