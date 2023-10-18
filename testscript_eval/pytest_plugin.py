@@ -32,7 +32,7 @@ class TestScriptItem(pytest.Item):
 
     def runtest(self):
         loop = asyncio.get_event_loop_policy().new_event_loop()
-        loop.run_until_complete(testscript.eval(self.spec, env))
+        loop.run_until_complete(testscript_eval.eval(self.spec, env))
         loop.close()
 
 
