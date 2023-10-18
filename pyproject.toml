@@ -9,7 +9,7 @@ readme = "README.md"
 license = { file = "LICENSE" }
 keywords = ["fhir"]
 authors = [{ name = "beda.software", email = "ilya@beda.software" }]
-dependencies = ["requests>=2.25.1", "aiohttp>=3.6.3", "pytz", "aiofiles", "fhirpathpy", "pyyaml-include", "jsonpath_ng", "funcy", "funcy", "pytest_asyncio"]
+dependencies = ["requests>=2.25.1", "aiohttp>=3.6.3", "pytz", "aiofiles", "fhirpathpy", "pyyaml-include", "jsonpath_ng", "funcy", "fhirpy", "pytest_asyncio"]
 version = "0.0.1"
 classifiers = [
     "Development Status :: 4 - Beta",
