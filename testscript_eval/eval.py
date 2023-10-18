@@ -8,8 +8,8 @@ import yaml
 from fhirpathpy import evaluate as fhirpath
 from yamlinclude import YamlIncludeConstructor
 
-from testscript import assertation
-from testscript.misc import RawResultAsyncFHIRClient, resolve_string_template
+from testscript_eval import assertation
+from testscript_eval.misc import RawResultAsyncFHIRClient, resolve_string_template
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__name__))
 YamlIncludeConstructor.add_to_loader_class(
