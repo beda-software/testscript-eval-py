@@ -1,3 +1,3 @@
 import pytest
 
-pytest_plugins = ["testscript.pytest_plugin", "pytester"]
+pytest_plugins = ["testscript_eval.pytest_plugin", "pytester"]
