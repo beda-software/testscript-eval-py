@@ -37,7 +37,9 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
       - name: Extract tag
         shell: bash
-        run: pip install testscript-eval && echo "import testscript_eval;print(testscript_eval.VERSION)" | python
+        run: >-
+          pip install testscript-eval &&
+          echo "import testscript_eval;print(f'tag={testscript_eval.VERSION}')" | python >>$GITHUB_OUTPUT
         id: extract_tag
       - name: Set up Docker Buildx
         id: buildx
@@ -47,6 +49,6 @@ jobs:
           docker buildx build
           --platform linux/arm64,linux/amd64
           --push
-          --tag bedasoftware/testscript-eval:${{ steps.extract_branch.outputs.branch }}
+          --tag bedasoftware/testscript-eval:${{ steps.extract_tag.outputs.tag }}
           --tag bedasoftware/testscript-eval:latest
           .
