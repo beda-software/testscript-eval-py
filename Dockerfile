@@ -1,12 +1,9 @@
-FROM python:3.11
-RUN pip install pipenv
+FROM python:3.11-slim
 
-RUN mkdir /app
 WORKDIR /app
 
-COPY Pipfile Pipfile.lock ./
-RUN pipenv install --dev
+RUN apt-get update \
+    && apt-get install -y git tree
 
-COPY . .
-
-EXPOSE 8081
+RUN pip install pytest
+RUN pip install testscript-eval
