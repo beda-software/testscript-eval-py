@@ -25,8 +25,8 @@ docker run -v "$(pwd)/resources:/app" --env-file ./env/testscript bedasoftware/t
 1. TestScript files should be stored in the TestScript folder;
 2. TestScript files should be in YAML format.
 ## Recommendations
-We recommend trying this plugin in pair with [Kaitenzushi](https://github.com/beda-software/kaitenzushi/).
-## Refences
+Highly recommend using testscript-eval-py alongside [Kaitenzushi](https://github.com/beda-software/kaitenzushi/) to enhance the TestScript development experience.
+## References
 1. [Pytest](https://docs.pytest.org/en/7.4.x/)
 2. [TestScript](https://hl7.org/fhir/R4/testscript.html)
 <p align="center">Made with ❤️ by <a href="https://beda.software">Beda Software</a></p>
