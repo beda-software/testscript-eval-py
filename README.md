@@ -1,6 +1,6 @@
-# testscript-eval-py is a pytest plugin designed to work with TestScript files
+# testscript-eval-py is an engine designed to run TestScript files
 ## Description
-This plugin adds a feature to pytest, allowing it to identify and run custom TestScript YAML files automatically. This upgrade is crucial as it makes it easier to check FHIR server actions using these scripts. The plugin is carefully made to improve pytest's built-in features, making the testing of FHIR server interactions more efficient.
+This engine introduces a feature that enables the automatic identification and execution of custom TestScript YAML files. This enhancement is vital as it simplifies the process of verifying FHIR server actions using these scripts. It makes the testing of FHIR server interactions more efficient.
 ## Install
 ### Install plugin
 ```bash
