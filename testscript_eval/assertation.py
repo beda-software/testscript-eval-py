@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 
@@ -61,8 +62,52 @@ def response(_assert_name, assertation, result, resource, var):
         raise Exception(f"Response code {response.status} is not supported")
 
 
-def validate_profile_id(_assert_name, assertation, result, resource, var):
-    logging.warning("Profile validation is not implemented yet")
+def resolve_profile(profile_id, profiles):
+    # validateProfileId is the id of a TestScript.profile entry; a canonical URL given
+    # directly instead (as fhir-frog TestScripts do) is used as is
+    for profile in profiles:
+        if profile.get("id") == profile_id:
+            return profile["reference"]
+    if "/" in profile_id:
+        return profile_id
+    raise Exception(f"validateProfileId '{profile_id}' does not match any TestScript.profile id")
+
+
+async def validate_profile_id(assertation, resource, client, profiles):
+    profile_url = resolve_profile(assertation["validateProfileId"], profiles)
+    assert isinstance(resource, dict) and "resourceType" in resource, (
+        f"No resource to validate against {profile_url}"
+    )
+    # Pass the profile both ways: as the $validate `profile` parameter, and in meta.profile,
+    # which servers that ignore the parameter (e.g. Aidbox) validate against
+    meta = resource.get("meta", {})
+    payload = {
+        **resource,
+        "meta": {**meta, "profile": list(dict.fromkeys([*meta.get("profile", []), profile_url]))},
+    }
+    response, outcome = await client.execute(
+        f"{resource['resourceType']}/$validate",
+        method="post",
+        data=payload,
+        params={"profile": profile_url},
+    )
+    if not isinstance(outcome, dict):
+        # Non-2xx: the body comes back wrapped in an exception object
+        try:
+            outcome = json.loads(str(outcome))
+        except ValueError:
+            raise AssertionError(
+                f"$validate against {profile_url} failed with status {response.status}: {outcome}"
+            )
+    errors = [
+        f"[{issue.get('severity')}] {', '.join(issue.get('expression', []))}: "
+        f"{issue.get('diagnostics') or issue.get('details', {}).get('text', '')}"
+        for issue in outcome.get("issue", [])
+        if issue.get("severity") in ("error", "fatal")
+    ]
+    assert response.status < 400 and not errors, (
+        f"Validation against {profile_url} failed (status {response.status}):\n" + "\n".join(errors)
+    )
 
 
 def parse_variable_in_string(string: str, variables):
@@ -101,6 +146,22 @@ def compare_response_expression_to_value(_assert_name, assertation, result, reso
     operations.eval(operator, expression_result[0], value)
 
 
+def expression(_assert_name, assertation, result, resource, var):
+    # An expression with a value is compared by the "value" rule, and one with
+    # compareToSourceId by the "compareToSourceExpression" rule
+    if "value" in assertation or "compareToSourceId" in assertation:
+        return
+    # Without a value the expression is a boolean condition: operator "eval",
+    # which is also the default (https://hl7.org/fhir/R5/testing.html#assertion-table)
+    operator = assertation.get("operator", "eval")
+    if operator != "eval":
+        raise NotImplementedAssert(f"Operator {operator} without a value is not implemented")
+    fixtures = var["--fixtures--"]
+    id = assertation.get("sourceId")
+    source = fixtures[id] if id else resource
+    operations.eval(operator, fhirpath(source, assertation["expression"], {}), None)
+
+
 def minimum_id(_assert_name, assertation, result, resource, var):
     fixtures = var["--fixtures--"]
     id = assertation["minimumId"]
@@ -125,8 +186,8 @@ assert_rules = {
     "responseCode": response_code,
     "resource": resource,
     "path": path,
+    "expression": expression,
     "response": response,
-    "validateProfileId": validate_profile_id,
     "compareToSourceExpression": compare_to_source_expression,
     "minimumId": minimum_id,
     "contentType": content_type,
@@ -139,15 +200,18 @@ assert_rules = {
 }
 
 
-def eval(assertation, result, resource, var, fixtures):
+async def eval(assertation, result, resource, var, fixtures, client, profiles):
     # TODO rid of temporary hack
     # pass fixtures as separated context item
     var["--fixtures--"] = fixtures
     logging.warning("%s", assertation["description"])
+    if assertation.get("direction") == "request":
+        # Skip all request tests
+        logging.warning("Skip request validation")
+        return
     for assert_name, assert_eval in assert_rules.items():
-        if assertation.get("direction") == "request":
-            # Skip all request tests
-            logging.warning("Skip request validation")
-            continue
         if assert_name in assertation:
             assert_eval(assert_name, assertation, result, resource, var)
+    # Validation calls the server, so it is not one of the synchronous assert_rules
+    if "validateProfileId" in assertation:
+        await validate_profile_id(assertation, resource, client, profiles)

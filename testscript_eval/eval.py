@@ -20,10 +20,6 @@ YamlIncludeConstructor.add_to_loader_class(
 async def setup_fixtures(client: RawResultAsyncFHIRClient, definition):
     fixtures = {}
     for f in definition.get("fixture", []):
-        if f.get("autocreate", False):
-            raise Exception("Autocreate is not supported")
-        if f.get("autodelete", False):
-            raise Exception("Autocreate is not supported")
         reference = f["resource"]["reference"]
         fixture_id = f["id"]
         if reference.startswith("#"):
@@ -49,6 +45,61 @@ async def setup_fixtures(client: RawResultAsyncFHIRClient, definition):
     return fixtures
 
 
+async def autocreate_fixtures(client: RawResultAsyncFHIRClient, definition, fixtures, created):
+    # `created` is filled one fixture at a time, so if a later create fails
+    # the fixtures already on the server are still autodeleted
+    for f in definition.get("fixture", []):
+        if not f.get("autocreate", False):
+            continue
+        fixture_id = f["id"]
+        fixture = fixtures[fixture_id]
+        logging.warning("Autocreate fixture %s", fixture_id)
+        # A fixture with an id is created under that id (update as create), so references
+        # between fixtures (e.g. Patient/<id>) resolve on the server as written
+        if "id" in fixture:
+            path, method = f"{fixture['resourceType']}/{fixture['id']}", "put"
+        else:
+            path, method = fixture["resourceType"], "post"
+        response, resource = await client.execute(path, method=method, data=fixture)
+        if not 200 <= response.status < 300:
+            raise Exception(
+                f"Autocreate of fixture '{fixture_id}' failed with status {response.status}: "
+                f"{resource}"
+            )
+        if not resource:
+            # No body returned (e.g. Prefer: return=minimal): take the id from Location
+            # ([base]/Type/id/_history/vid)
+            parts = urlsplit(response.headers["Location"]).path.strip("/").split("/")
+            if "_history" in parts:
+                parts = parts[: parts.index("_history")]
+            resource = {**fixture, "id": parts[-1]}
+        # Later references, variables and autodelete must use the server-assigned id
+        fixtures[fixture_id] = resource
+        created.append(fixture_id)
+
+
+async def autodelete_fixtures(client: RawResultAsyncFHIRClient, definition, fixtures, created):
+    for f in reversed(definition.get("fixture", [])):
+        if not f.get("autodelete", False):
+            continue
+        fixture_id = f["id"]
+        # An autocreate fixture whose create did not happen has nothing to delete
+        if f.get("autocreate", False) and fixture_id not in created:
+            continue
+        fixture = fixtures.get(fixture_id)
+        if not fixture or "id" not in fixture:
+            logging.warning("Autodelete fixture %s skipped: it has no id", fixture_id)
+            continue
+        logging.warning("Autodelete fixture %s", fixture_id)
+        response, _resource = await client.execute(
+            f"{fixture['resourceType']}/{fixture['id']}", method="delete"
+        )
+        if not (200 <= response.status < 300 or response.status in (404, 410)):
+            logging.warning(
+                "Autodelete of fixture %s failed with status %s", fixture_id, response.status
+            )
+
+
 def setup_variables(definition, fixtures, env):
     variables = {}
     for var in definition.get("variable", []):
@@ -67,17 +118,19 @@ async def setup(client, definition, fixtures, variables):
         return
 
     actions = definition["setup"]["action"]
-    return await eval_actions(client, actions, fixtures, variables)
+    return await eval_actions(client, actions, fixtures, variables, definition.get("profile", []))
 
 
 async def teardown(client, definition, fixtures, variables):
     if "teardown" not in definition:
         return
     actions = definition["teardown"]["action"]
-    return await eval_actions(client, actions, fixtures, variables)
+    return await eval_actions(client, actions, fixtures, variables, definition.get("profile", []))
 
 
-async def eval_actions(client: RawResultAsyncFHIRClient, actions, fixtures, variables):
+async def eval_actions(
+    client: RawResultAsyncFHIRClient, actions, fixtures, variables, profiles
+):
     response = None
     resource = None
     for action in actions:
@@ -129,7 +182,9 @@ async def eval_actions(client: RawResultAsyncFHIRClient, actions, fixtures, vari
                 fixtures[operation["responseId"]] = resource
         else:
             assert response
-            assertation.eval(action["assert"], response, resource, variables, fixtures)
+            await assertation.eval(
+                action["assert"], response, resource, variables, fixtures, client, profiles
+            )
 
 
 async def eval(definition, env):
@@ -141,18 +196,26 @@ async def eval(definition, env):
 
     logging.warning("Loading fixtures")
     fixtures = await setup_fixtures(client, definition)
-    logging.warning("Loading variables")
-    variables = setup_variables(definition, fixtures, env)
+    created = []
 
     try:
-        logging.warning("Setup")
-        await setup(client, definition, fixtures, variables)
+        await autocreate_fixtures(client, definition, fixtures, created)
+        logging.warning("Loading variables")
+        variables = setup_variables(definition, fixtures, env)
 
-        logging.warning("Testing")
-        for test in definition.get("test", []):
-            logging.warning("Test %s, %s", test["name"], test["description"])
-            test_actions = test.get("action", [])
-            await eval_actions(client, test_actions, fixtures, variables)
+        try:
+            logging.warning("Setup")
+            await setup(client, definition, fixtures, variables)
+
+            logging.warning("Testing")
+            for test in definition.get("test", []):
+                logging.warning("Test %s, %s", test["name"], test["description"])
+                test_actions = test.get("action", [])
+                await eval_actions(
+                    client, test_actions, fixtures, variables, definition.get("profile", [])
+                )
+        finally:
+            logging.warning("Teardown")
+            await teardown(client, definition, fixtures, variables)
     finally:
-        logging.warning("Teardown")
-        await teardown(client, definition, fixtures, variables)
+        await autodelete_fixtures(client, definition, fixtures, created)

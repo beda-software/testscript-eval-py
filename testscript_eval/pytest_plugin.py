@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 
 import pytest
@@ -9,13 +10,14 @@ import testscript_eval
 
 
 def pytest_collect_file(parent, file_path):
-    if file_path.suffix == ".yaml" and file_path.parent.name == "TestScript":
+    if file_path.suffix in (".yaml", ".json") and file_path.parent.name == "TestScript":
         return TestScriptFile.from_parent(parent, path=file_path)
 
 
 class TestScriptFile(pytest.File):
     def collect(self):
-        raw = yaml.safe_load(self.path.open())
+        with self.path.open() as f:
+            raw = json.load(f) if self.path.suffix == ".json" else yaml.safe_load(f)
         yield TestScriptItem.from_parent(self, name=raw["name"], spec=raw)
 
 

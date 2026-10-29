@@ -33,7 +33,13 @@ def not_empty(_operation, source, _value):
     assert source is not None
 
 
+def evaluate(_operation, source, _value):
+    # `source` is the FHIRPath result collection of a boolean expression
+    assert source == [True], f"Expression evaluated to {source}, expected [True]"
+
+
 operations = {
+    "eval": evaluate,
     "exists": exists,
     "contains": contains,
     "in": contains,

@@ -23,7 +23,7 @@ docker run -v "$(pwd)/resources:/app" --env-file ./env/testscript bedasoftware/t
 ```
 ### Restrictions
 1. TestScript files should be stored in the TestScript folder;
-2. TestScript files should be in YAML format.
+2. TestScript files should be in YAML (`.yaml`) or JSON (`.json`) format.
 ## Recommendations
 Highly recommend using testscript-eval-py alongside [Kaitenzushi](https://github.com/beda-software/kaitenzushi/) to enhance the TestScript development experience.
 ## References
