@@ -12,7 +12,6 @@ ipython = "~=8.11.0"
 
 [packages]
 fhirpy = "~=1.3.1"
-fhirpathpy = "~=0.1.2"
 pytest = "~=7.2.2"
 pytest-asyncio = "~=0.20.3"
 jsonpath-ng = "~=1.5.3"
@@ -20,6 +19,7 @@ funcy = "~=1.18"
 aiofiles = "~=23.1.0"
 pyyaml = "~=6.0"
 pyyaml-include = "~=1.3"
+fhirpathpy = "~=2.2.4"
 
 [requires]
 python_version = "3.11"

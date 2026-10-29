@@ -5,11 +5,10 @@ from urllib.parse import parse_qs, urlparse, urlsplit
 
 import aiofiles
 import yaml
-from fhirpathpy import evaluate as fhirpath
 from yamlinclude import YamlIncludeConstructor
 
 from testscript_eval import assertation
-from testscript_eval.misc import RawResultAsyncFHIRClient, resolve_string_template
+from testscript_eval.misc import RawResultAsyncFHIRClient, fhirpath, resolve_string_template
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__name__))
 YamlIncludeConstructor.add_to_loader_class(
@@ -109,7 +108,8 @@ def setup_variables(definition, fixtures, env):
             variables[name] = fhirpath(context, var["expression"], {})[0]
         else:
             variables[name] = env.get(name, var.get("defaultValue"))
-            assert variables[name], f"Missing {name} variable"
+            if not variables[name]:
+                raise Exception(f"Missing {name} variable")
     return variables
 
 
@@ -181,7 +181,8 @@ async def eval_actions(
             if "responseId" in operation:
                 fixtures[operation["responseId"]] = resource
         else:
-            assert response
+            if response is None:
+                raise Exception("Assert has no preceding operation response")
             await assertation.eval(
                 action["assert"], response, resource, variables, fixtures, client, profiles
             )

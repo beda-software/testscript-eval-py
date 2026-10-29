@@ -1,16 +1,21 @@
 import json
 import logging
 import re
+import warnings
 
-from fhirpathpy import evaluate as fhirpath
 from jsonpath_ng.ext import parse
 
 from . import operations
-from .misc import resolve_string_template
+from .misc import fhirpath, resolve_string_template
+from .operations import check
 
 
 class NotImplementedAssert(Exception):
     pass
+
+
+class TestScriptWarning(UserWarning):
+    """A failed warningOnly assert: reported, but does not fail the test script."""
 
 
 def not_implemented_assert(assert_name, _assertation, _result, _resource, _var):
@@ -32,10 +37,11 @@ def response_code(_assert_name, assertation, result, _resource, _var):
 
 def resource(_assert_name, assertation, _result, resource, _var):
     resource_type = assertation["resource"]
-    if assertation.get("operator", "equals") == "equals":
-        assert resource_type == resource["resourceType"]
-    else:
-        assert resource_type == resource["resourceType"]
+    check(isinstance(resource, dict), "No resource in the response")
+    check(
+        resource_type == resource.get("resourceType"),
+        f"Expected resource {resource_type}, got {resource.get('resourceType')}",
+    )
 
 
 def path(_assert_name, assertation, result, resource, var):
@@ -51,15 +57,15 @@ def path(_assert_name, assertation, result, resource, var):
 def response(_assert_name, assertation, result, resource, var):
     response = assertation["response"]
     if response == "okay":
-        assert result.status == 200, f"Expected status 200 (okay), got {result.status}"
+        check(result.status == 200, f"Expected status 200 (okay), got {result.status}")
     elif response == "notFound":
-        assert result.status == 404, f"Expected status 404 (notFound), got {result.status}"
+        check(result.status == 404, f"Expected status 404 (notFound), got {result.status}")
     elif response == "bad":
-        assert result.status == 400, f"Expected status 400 (bad), got {result.status}"
+        check(result.status == 400, f"Expected status 400 (bad), got {result.status}")
     elif response == "created":
-        assert result.status == 201, f"Expected status 201 (created), got {result.status}"
+        check(result.status == 201, f"Expected status 201 (created), got {result.status}")
     else:
-        raise Exception(f"Response code {response.status} is not supported")
+        raise Exception(f"Response code {response} is not supported")
 
 
 def resolve_profile(profile_id, profiles):
@@ -75,8 +81,9 @@ def resolve_profile(profile_id, profiles):
 
 async def validate_profile_id(assertation, resource, client, profiles):
     profile_url = resolve_profile(assertation["validateProfileId"], profiles)
-    assert isinstance(resource, dict) and "resourceType" in resource, (
-        f"No resource to validate against {profile_url}"
+    check(
+        isinstance(resource, dict) and "resourceType" in resource,
+        f"No resource to validate against {profile_url}",
     )
     # Pass the profile both ways: as the $validate `profile` parameter, and in meta.profile,
     # which servers that ignore the parameter (e.g. Aidbox) validate against
@@ -91,22 +98,33 @@ async def validate_profile_id(assertation, resource, client, profiles):
         data=payload,
         params={"profile": profile_url},
     )
+    # No validation happened (auth, $validate unsupported, server error): an engine/infrastructure
+    # error, never a check failure, so warningOnly does not hide it
+    if response.status in (401, 403, 404, 405) or response.status >= 500:
+        raise Exception(
+            f"$validate against {profile_url} could not run: status {response.status}: {outcome}"
+        )
     if not isinstance(outcome, dict):
         # Non-2xx: the body comes back wrapped in an exception object
         try:
             outcome = json.loads(str(outcome))
         except ValueError:
-            raise AssertionError(
-                f"$validate against {profile_url} failed with status {response.status}: {outcome}"
-            )
+            outcome = None
+    if not isinstance(outcome, dict) or outcome.get("resourceType") != "OperationOutcome":
+        raise Exception(
+            f"$validate against {profile_url} returned no OperationOutcome "
+            f"(status {response.status}): {outcome}"
+        )
     errors = [
         f"[{issue.get('severity')}] {', '.join(issue.get('expression', []))}: "
         f"{issue.get('diagnostics') or issue.get('details', {}).get('text', '')}"
         for issue in outcome.get("issue", [])
         if issue.get("severity") in ("error", "fatal")
     ]
-    assert response.status < 400 and not errors, (
-        f"Validation against {profile_url} failed (status {response.status}):\n" + "\n".join(errors)
+    # A 2xx, or a 4xx such as 400/422 with an OperationOutcome, is the validation result
+    check(
+        response.status < 400 and not errors,
+        f"Validation against {profile_url} failed (status {response.status}):\n" + "\n".join(errors),
     )
 
 
@@ -137,6 +155,7 @@ def compare_response_expression_to_value(_assert_name, assertation, result, reso
     fixture = fixtures[id] if id else resource
     expression = assertation["expression"]
     expression_result = fhirpath(fixture, expression, {})
+    check(expression_result, f"Expression '{expression}' returned no value")
     if len(expression_result) > 1:
         logging.warning("Expression '%s' returns more then one value")
     operator = assertation.get("operator", "equals")
@@ -166,8 +185,9 @@ def minimum_id(_assert_name, assertation, result, resource, var):
     fixtures = var["--fixtures--"]
     id = assertation["minimumId"]
     fixture = fixtures[id]
+    check(isinstance(resource, dict), "No resource in the response")
     for k, v in fixture.items():
-        assert resource[k] == v
+        check(k in resource and resource[k] == v, f"minimumId {id}: {k} does not match")
 
 
 def content_type(_assert_name, assertation, result, resource, var):
@@ -178,7 +198,8 @@ def content_type(_assert_name, assertation, result, resource, var):
 
 
 def navigation_links(_assert_name, assertation, result, resource, var):
-    assert "link" in resource
+    check(isinstance(resource, dict), "No resource in the response")
+    check("link" in resource, "Response has no navigation links")
 
 
 assert_rules = {
@@ -209,9 +230,17 @@ async def eval(assertation, result, resource, var, fixtures, client, profiles):
         # Skip all request tests
         logging.warning("Skip request validation")
         return
-    for assert_name, assert_eval in assert_rules.items():
-        if assert_name in assertation:
-            assert_eval(assert_name, assertation, result, resource, var)
-    # Validation calls the server, so it is not one of the synchronous assert_rules
-    if "validateProfileId" in assertation:
-        await validate_profile_id(assertation, resource, client, profiles)
+    try:
+        for assert_name, assert_eval in assert_rules.items():
+            if assert_name in assertation:
+                assert_eval(assert_name, assertation, result, resource, var)
+        # Validation calls the server, so it is not one of the synchronous assert_rules
+        if "validateProfileId" in assertation:
+            await validate_profile_id(assertation, resource, client, profiles)
+    except AssertionError as e:
+        # A failed check of a warningOnly assert is reported and the script goes on; anything
+        # else (engine, script or infrastructure errors) is not an AssertionError and still raises
+        if not assertation.get("warningOnly", False):
+            raise
+        logging.warning("warningOnly assert failed: %s: %s", assertation["description"], e)
+        warnings.warn(TestScriptWarning(f"{assertation['description']}: {e}"))

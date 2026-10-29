@@ -1,11 +1,19 @@
 import json
 
 import aiohttp
+from fhirpathpy import evaluate
+from fhirpathpy.models import models
 from fhirpy import AsyncFHIRClient
 from fhirpy.base.exceptions import OperationOutcome, ResourceNotFound
 from fhirpy.base.utils import AttrDict
 from funcy.strings import re_all
 from funcy.types import is_list, is_mapping
+
+
+def fhirpath(resource, expression, context):
+    # The FHIR R4 model lets FHIRPath resolve choice elements (e.g. `value` for
+    # valueCodeableConcept) and types (ofType, is, as) on plain JSON resources
+    return evaluate(resource, expression, context, models["r4"])
 
 
 def walk_dict(d):

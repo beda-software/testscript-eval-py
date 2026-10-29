@@ -5,6 +5,13 @@ class NotImplementedOperation(Exception):
     pass
 
 
+def check(condition, message):
+    # A failed check is the only thing raised as AssertionError, so warningOnly can tell it
+    # apart from engine errors; explicit raise, as `python -O` strips bare asserts
+    if not condition:
+        raise AssertionError(message)
+
+
 def not_implemented_operation(operation, source, value):
     raise NotImplementedOperation(f"Operation {operation} is not implemented")
 
@@ -13,29 +20,31 @@ def contains(_operation, source, values):
     match = False
     for value in values.split(","):
         match = match or value in source
-    assert match, f"{source} not in {values}"
+    check(match, f"{source} not in {values}")
 
 
 def exists(_operation, source, _value):
-    if is_list(source) and len(source) == 0:
-        raise Exception("Exist validation issue")
-    elif is_mapping(source) and source == {}:
-        raise Exception("Exist validation issue")
-    elif source is None:
-        raise Exception("Exist validation issue")
+    check(
+        not (
+            (is_list(source) and len(source) == 0)
+            or (is_mapping(source) and source == {})
+            or source is None
+        ),
+        "Exist validation issue",
+    )
 
 
 def equals(_operation, source, value):
-    assert source == value, f"Got {source}, expected {value}"
+    check(source == value, f"Got {source}, expected {value}")
 
 
 def not_empty(_operation, source, _value):
-    assert source is not None
+    check(source is not None, "Got no value, expected a non-empty one")
 
 
 def evaluate(_operation, source, _value):
     # `source` is the FHIRPath result collection of a boolean expression
-    assert source == [True], f"Expression evaluated to {source}, expected [True]"
+    check(source == [True], f"Expression evaluated to {source}, expected [True]")
 
 
 operations = {
