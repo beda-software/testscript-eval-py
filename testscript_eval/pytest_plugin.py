@@ -1,12 +1,12 @@
 import asyncio
-import json
 import os
+import warnings
 
 import pytest
-import yaml
-from pytest_asyncio.plugin import pytest_runtest_setup
 
 import testscript_eval
+from testscript_eval.errors import TestScriptWarning
+from testscript_eval.misc import load_file
 
 
 def pytest_collect_file(parent, file_path):
@@ -16,15 +16,16 @@ def pytest_collect_file(parent, file_path):
 
 class TestScriptFile(pytest.File):
     def collect(self):
-        with self.path.open() as f:
-            raw = json.load(f) if self.path.suffix == ".json" else yaml.safe_load(f)
+        include_dir = os.path.join(os.getcwd(), "tests", "resources")
+        raw = load_file(str(self.path), include_dir=include_dir)
         yield TestScriptItem.from_parent(self, name=raw["name"], spec=raw)
 
 
-env = {
-    "baseUrl": os.environ.get("FHIR_SERVER_BASE_URL"),
-    "authorization": os.environ.get("FHIR_SERVER_AUTHORIZATION"),
-}
+def env():
+    return {
+        "baseUrl": os.environ.get("FHIR_SERVER_BASE_URL"),
+        "authorization": os.environ.get("FHIR_SERVER_AUTHORIZATION"),
+    }
 
 
 class TestScriptItem(pytest.Item):
@@ -33,9 +34,8 @@ class TestScriptItem(pytest.Item):
         self.spec = spec
 
     def runtest(self):
-        loop = asyncio.get_event_loop_policy().new_event_loop()
-        loop.run_until_complete(testscript_eval.eval(self.spec, env))
-        loop.close()
+        for message in asyncio.run(testscript_eval.eval(self.spec, env())):
+            warnings.warn(TestScriptWarning(message))
 
 
 def pytest_addoption(parser, pluginmanager):
